@@ -1,0 +1,9 @@
+fastkde
+h5py
+multiprocess
+pathos
+pyqtgraph
+QtPy
+scipy
+PyQt5
+matplotlib
