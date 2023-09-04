@@ -153,7 +153,7 @@ class BeamMakeWindow(QWidget):
         self.BeamParameters.addWidget(self.TorZ,10,1)
         
         self.ProfileShape = pyqt.QComboBox()
-        self.ProfileShape.addItems(['Gaussian', 'SkewGaussian', 'Uniform', 'Plateau', 'DoubleGaus'])
+        self.ProfileShape.addItems(['Gaussian', 'SkewGaussian', 'Uniform', 'Plateau', 'DoubleGauss'])
         self.ProfileShape.currentIndexChanged.connect( self.ProfileShapeChange )
         self.BeamParameters.addWidget(pyqt.QLabel('Longitudinal Profile Shape:'),11,0)
         self.BeamParameters.addWidget(self.ProfileShape,11,1)
@@ -303,7 +303,7 @@ class BeamMakeWindow(QWidget):
         if self.LastProfile == 'Plateau':
             self.PlateauLabel.setVisible(False)
             self.PlateauTime.setVisible(False)
-        if self.LastProfile == 'DoubleGaus':
+        if self.LastProfile == 'DoubleGauss':
             self.SecondGausSigmaLabel.setVisible(False)
             self.SecondGausSigma.setVisible(False)
             self.SecondGausSigmaScale.setVisible(False)
@@ -330,18 +330,18 @@ class BeamMakeWindow(QWidget):
             
         self.SecondGausSigmaLabel = pyqt.QLabel('Second Gaussian RMS Length [m or s]')
         self.SecondGausSigma = pyqt.QDoubleSpinBox()
-        self.SecondGausSigma.setMinimum(0)
+        self.SecondGausSigma.setRange(0,999)
         self.SecondGausSigmaScale = pyqt.QComboBox()
         self.SecondGausSigmaScale.addItems(self.scalelist)
         self.SecondGausAmpLabel = pyqt.QLabel('Second Gaussian Relative Amplitude')
         self.SecondGausAmp = pyqt.QDoubleSpinBox()
-        self.SecondGausAmp.setMinimum(0)
+        self.SecondGausAmp.setRange(0,1e6)
         self.SecondGausOffsetLabel = pyqt.QLabel('Gaussian Peak to Peak Distance [m or s]')
         self.SecondGausOffset = pyqt.QDoubleSpinBox()
-        self.SecondGausOffset.setMinimum(0)
+        self.SecondGausOffset.setRange(0,999)
         self.SecondGausOffsetScale = pyqt.QComboBox()
         self.SecondGausOffsetScale.addItems(self.scalelist)
-        if self.ProfileShape.currentText() == 'DoubleGaus':
+        if self.ProfileShape.currentText() == 'DoubleGauss':
             self.BeamParameters.addWidget(self.SecondGausSigmaLabel,12,0)
             self.BeamParameters.addWidget(self.SecondGausSigma,12,1)
             self.BeamParameters.addWidget(self.SecondGausSigmaScale,12,2)

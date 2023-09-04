@@ -69,7 +69,7 @@ class BeamMakeWindow(QWidget):
         self.scalelist = ['unit','kilo', 'mega', 'giga','milli', 'micro', 'nano', 'pico', 'femto']
         
         self.nMacros = pyqt.QSpinBox()
-        self.nMacros.setRange(1000,100000000000)
+        self.nMacros.setRange(1000,2147483647)
         self.nMacros.setValue(32000)
         self.nMacros.setSingleStep(1000)
         self.BeamParameters.addWidget(pyqt.QLabel("Number of Macroparticles:"),0,0,1,2)
@@ -163,7 +163,7 @@ class BeamMakeWindow(QWidget):
         self.BeamParameters.addWidget(self.TorZ,10,1)
         
         self.ProfileShape = pyqt.QComboBox()
-        self.ProfileShape.addItems(['Gaussian', 'SkewGaussian', 'Uniform', 'Plateau', 'DoubleGaus'])
+        self.ProfileShape.addItems(['Gaussian', 'SkewGaussian', 'Uniform', 'Plateau', 'DoubleGauss'])
         self.ProfileShape.currentIndexChanged.connect( self.ProfileShapeChange )
         self.BeamParameters.addWidget(pyqt.QLabel('Longitudinal Profile Shape:'),11,0)
         self.BeamParameters.addWidget(self.ProfileShape,11,1)
@@ -242,7 +242,7 @@ class BeamMakeWindow(QWidget):
         self.XYPlot.setBackground('w')
         self.XYPlot.setLabel('bottom','x [m]')
         self.XYPlot.setLabel('left','y [m]')
-        self.XYPlot.setMinimumSize(windowWidth*0.3, windowHeight*0.3)
+        self.XYPlot.setMinimumSize(int(windowWidth*0.3), int(windowHeight*0.3))
         self.xyplot = pg.ScatterPlotItem()
         self.xyplot.setData(self.BeamXData,self.BeamYData)
         
@@ -254,7 +254,7 @@ class BeamMakeWindow(QWidget):
         self.QPlot.setBackground('w')
         self.QPlot.setLabel('bottom', 'z [m]')
         self.QPlot.setLabel('left','Intensity [arb.]')
-        self.QPlot.setMinimumSize(windowWidth*0.3, windowHeight*0.3)
+        self.QPlot.setMinimumSize(int(windowWidth*0.3), int(windowHeight*0.3))
         self.ZHist = [[],[0]]
         self.QCurve = pg.PlotCurveItem(self.ZHist[1], self.ZHist[0], stepMode=True, fillLevel=0)
         self.QPlot.addItem(self.QCurve)
@@ -264,7 +264,7 @@ class BeamMakeWindow(QWidget):
         self.XXPPlot.setBackground('w')
         self.XXPPlot.setLabel('bottom','x [m]')
         self.XXPPlot.setLabel('left','x\' [rads]')
-        self.XXPPlot.setMinimumSize(windowWidth*0.3, windowHeight*0.3)
+        self.XXPPlot.setMinimumSize(int(windowWidth*0.3), int(windowHeight*0.3))
         self.xxpplot =self.XXPPlot.plot(self.BeamXData, self.BeamXPData, pen = 'k')
         self.XXPPlot.addItem(self.xxpplot)
         
@@ -272,7 +272,7 @@ class BeamMakeWindow(QWidget):
         self.YYPPlot.setBackground('w')
         self.YYPPlot.setLabel('bottom','y [m]')
         self.YYPPlot.setLabel('left','y\' [rads]')
-        self.YYPPlot.setMinimumSize(windowWidth*0.3, windowHeight*0.3)
+        self.YYPPlot.setMinimumSize(int(windowWidth*0.3), int(windowHeight*0.3))
         self.yypplot = self.YYPPlot.plot(self.BeamYData, self.BeamYPData, pen = 'k')
         self.YYPPlot.addItem(self.yypplot)
         
@@ -280,7 +280,7 @@ class BeamMakeWindow(QWidget):
         self.ZcPZPlot.setBackground('w')
         self.ZcPZPlot.setLabel('bottom','z [m]')
         self.ZcPZPlot.setLabel('left','cpz [eV/c]')
-        self.ZcPZPlot.setMinimumSize(windowWidth*0.3, windowHeight*0.3)
+        self.ZcPZPlot.setMinimumSize(int(windowWidth*0.3), int(windowHeight*0.3))
         self.zcpzplot = self.ZcPZPlot.plot(self.BeamZData, self.BeamcpzData, pen = 'k')
         self.ZcPZPlot.addItem(self.zcpzplot)
         
@@ -288,7 +288,7 @@ class BeamMakeWindow(QWidget):
         self.cpzPlot.setBackground('w')
         self.cpzPlot.setLabel('bottom', 'cpz [eV/c]')
         self.cpzPlot.setLabel('left','Intensity [arb.]')
-        self.cpzPlot.setMinimumSize(windowWidth*0.3, windowHeight*0.3)
+        self.cpzPlot.setMinimumSize(int(windowWidth*0.3), int(windowHeight*0.3))
         self.cpzHist = [[],[0]]
         self.cpzCurve = pg.PlotCurveItem(self.cpzHist[1], self.cpzHist[0], stepMode=True, fillLevel=0)
         self.cpzPlot.addItem(self.cpzCurve)
@@ -313,7 +313,7 @@ class BeamMakeWindow(QWidget):
         if self.LastProfile == 'Plateau':
             self.PlateauLabel.setVisible(False)
             self.PlateauTime.setVisible(False)
-        if self.LastProfile == 'DoubleGaus':
+        if self.LastProfile == 'DoubleGauss':
             self.SecondGausSigmaLabel.setVisible(False)
             self.SecondGausSigma.setVisible(False)
             self.SecondGausSigmaScale.setVisible(False)
@@ -340,18 +340,18 @@ class BeamMakeWindow(QWidget):
             
         self.SecondGausSigmaLabel = pyqt.QLabel('Second Gaussian RMS Length [m or s]')
         self.SecondGausSigma = pyqt.QDoubleSpinBox()
-        self.SecondGausSigma.setMinimum(0)
+        self.SecondGausSigma.setRange(0,999)
         self.SecondGausSigmaScale = pyqt.QComboBox()
         self.SecondGausSigmaScale.addItems(self.scalelist)
         self.SecondGausAmpLabel = pyqt.QLabel('Second Gaussian Relative Amplitude')
         self.SecondGausAmp = pyqt.QDoubleSpinBox()
-        self.SecondGausAmp.setMinimum(0)
+        self.SecondGausAmp.setRange(0,1e6)
         self.SecondGausOffsetLabel = pyqt.QLabel('Gaussian Peak to Peak Distance [m or s]')
         self.SecondGausOffset = pyqt.QDoubleSpinBox()
-        self.SecondGausOffset.setMinimum(0)
+        self.SecondGausOffset.setRange(0,999)
         self.SecondGausOffsetScale = pyqt.QComboBox()
         self.SecondGausOffsetScale.addItems(self.scalelist)
-        if self.ProfileShape.currentText() == 'DoubleGaus':
+        if self.ProfileShape.currentText() == 'DoubleGauss':
             self.BeamParameters.addWidget(self.SecondGausSigmaLabel,12,0)
             self.BeamParameters.addWidget(self.SecondGausSigma,12,1)
             self.BeamParameters.addWidget(self.SecondGausSigmaScale,12,2)
@@ -430,8 +430,7 @@ class BeamMakeWindow(QWidget):
         binnedBeam = dbt.beamBinner(myBeam)
         binnedBeam.binTheBeam(Lx=Lx,Dx=Dx,Ly=Ly,Dy=Dy,Lz=Lz,Dz=Dz)
         print("Fraction of total charge captured on this mesh is",binnedBeam.nMacroHist/myBeam.nMacros)
-        return binnedBeam
-        
+        return binnedBeam      
         
     def BeamPlot(self):
         beam = self.MakeBeam()
