@@ -1,5 +1,6 @@
 # DiWaCAT
 Dielectric Wakefield Calculator and Tracker
+
 [![DOI](https://zenodo.org/badge/686930732.svg)](https://zenodo.org/badge/latestdoi/686930732)
 
 A Python and C++ based wakefield solver for relativistic electron bunches in dielectric lined waveguides (DLW).
