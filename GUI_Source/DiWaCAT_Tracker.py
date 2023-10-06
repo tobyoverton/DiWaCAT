@@ -114,6 +114,8 @@ class BeamTrackFunction(QThread):
             self.newbeam.emit(CurrentBeam)
             
         self.finished.emit()
+    def stop(self):
+        self._isRunning = False
             
 class BeamTrackWindow(QWidget):
     '''
@@ -440,6 +442,7 @@ class BeamTrackWindow(QWidget):
         
         
     def SimFinished(self):
+        self.stop_thread()
         self.BeamFile.setEnabled(True)
         self.LoadBeamButton.setEnabled(True)
         self.BeamFieldSame.setEnabled(True)
@@ -454,6 +457,11 @@ class BeamTrackWindow(QWidget):
         self.SimulateButton.setEnabled(True)
         if self.DriftDistance.value() > 0:
             self.DriftBeamEnd()
+    def stop_thread(self):
+        #Make sure our thread is closed - attempt to stop memory leaks
+        self.function.stop()
+        self.function.quit()
+        self.function.wait()
     def DriftBeamEnd(self):
         beamToDrift=DWA.DiWaCATOutput()
         beamToDrift.beam = copy.deepcopy(self.TrackedBeams[-1])

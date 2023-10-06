@@ -14,7 +14,7 @@ os.chdir(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(os.path.dirname(__file__))
 
 #Import the files with each GUI window and functions
-from GUI_Source import BeamMakeWindow, BeamMeshWindow, FieldPlotter, BeamPlotter, DiWaCAT_Tracker
+from GUI_Source import BeamMakeWindow, BeamMeshWindow, FieldPlotter, BeamPlotter, DiWaCAT_Tracker, FieldCalcWindow
 
 
    
@@ -80,15 +80,10 @@ class MainWindow(QMainWindow):
         self.f.show()
         
     def DiWaCATOpen(self,checked):
-        popen = subprocess.Popen(["./FieldSolver_Executable/DiWaCAT_FieldSolverUI.exe"])
-        '''
-        popen = subprocess.Popen(["./DWA_Code/DiWaCAT_Executable/DiWaCAT_FieldSolverUI.exe"], stdout=subprocess.PIPE,bufsize=1)
-        lines_iterator = iter(popen.stdout.readline, b"")
-        while popen.poll() is None:
-            for line in lines_iterator:
-                nline = line.rstrip()
-                print(nline.decode("latin"), end = "\r\n",flush =True)
-        '''
+        self.g = FieldCalcWindow.CalculationWindow()
+        self.g.show()
+        #popen = subprocess.Popen(["./FieldSolver_Executable/DiWaCAT_FieldSolverUI.exe"])
+        
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     w = MainWindow()
