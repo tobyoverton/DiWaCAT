@@ -34,7 +34,7 @@ if %PYTHON_ARCH%==64 (
 ) else (
     set CMAKE_ARCH=Win32
 )
-pause
+
 cmake -DCMAKE_BUILD_TYPE=Release -Dpybind11_DIR=!PYBIND11_PATH! -A !CMAKE_ARCH! ..
 if errorlevel 1 (
     echo CMake configuration failed!
