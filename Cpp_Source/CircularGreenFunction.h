@@ -88,8 +88,8 @@ void CylForceToCart(vector<double> &Fx, vector<double> &Fy, vector<double> Fr, v
 	Fx.resize(Fr.size());
 	Fy.resize(Fr.size());
 	for (size_t i = 0; i < theta.size(); i++) {
-		Fy[i] = (Fr[i] * cos(theta[i])) - (Ftheta[i] * sin(theta[i]));
-		Fx[i] = (Fr[i] * sin(theta[i])) - (Ftheta[i] * cos(theta[i]));
+		Fx[i] = (Fr[i] * cos(theta[i])) - (Ftheta[i] * sin(theta[i]));
+		Fy[i] = (Fr[i] * sin(theta[i])) - (Ftheta[i] * cos(theta[i]));
 	}
 }
 
