@@ -88,8 +88,8 @@ void CylForceToCart(vector<double> &Fx, vector<double> &Fy, vector<double> Fr, v
 	Fx.resize(Fr.size());
 	Fy.resize(Fr.size());
 	for (size_t i = 0; i < theta.size(); i++) {
-		Fx[i] = (Fr[i] * cos(theta[i])) - (Ftheta[i] * sin(theta[i]));
-		Fy[i] = (Fr[i] * sin(theta[i])) - (Ftheta[i] * cos(theta[i]));
+		Fy[i] = (Fr[i] * cos(theta[i])) - (Ftheta[i] * sin(theta[i]));
+		Fx[i] = (Fr[i] * sin(theta[i])) - (Ftheta[i] * cos(theta[i]));
 	}
 }
 
@@ -762,8 +762,10 @@ std::tuple<vector<double>, vector<double>, vector<double>> TotalForceMeshCircula
 	std::chrono::duration<double> CalculationTime = CalculationEndTime - CalculationStart;
 	std::cout << "Force Calculation Time: " << CalculationTime.count() << "s" << std::endl;
 	std::cout << "Number of Unfound Points: " << ErrorCount << std::endl;
-	
-	return std::make_tuple(Fz, Fr, Ftheta);
+	vector<double> Fx(Fz.size());
+	vector<double> Fy(Fz.size());
+	CylForceToCart(Fx, Fy, Fr, Ftheta, theta);
+	return std::make_tuple(Fz, Fx, Fy);
 }
 
 
