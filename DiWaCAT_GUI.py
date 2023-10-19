@@ -5,9 +5,19 @@ DiWaCAT GUI using PyQT
 
 # Only needed for access to command line arguments
 
+from PyQt5.QtWidgets import QWidget
 from PyQt5.QtWidgets import QApplication, QMainWindow
 import PyQt5.QtWidgets as pyqt
+from PyQt5.QtCore import QThread,pyqtSignal
 import sys, os, subprocess
+from pathos.helpers import mp
+import scipy.constants as const
+import numpy as np
+import pyqtgraph as pg
+from pathlib import Path
+import copy
+from Python_Tools.Modules import diwacat_tools as DWA
+from Python_Tools.Modules import beam_tools as dbt
 
 #Force the working directory to be the root directory of DiWaCAT files
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
