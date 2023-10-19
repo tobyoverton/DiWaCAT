@@ -61,9 +61,14 @@ class DiWaCATOutput(object):
                 self._DielectricParameter['y0'] = parameter_array[5][0];
                 self._DielectricParameter['x0'] = parameter_array[4][0];
                 if (len(parameter_array)<10):
-                    self._DielectricParameter['w'] = 0
-                    self._DielectricParameter['y0'] = parameter_array[4][0];
-                    self._DielectricParameter['x0'] = parameter_array[3][0];
+                    #Also check the field calculated isn't in the old format
+                    print(h5file['DielectricParameters/columns'][()][2][0])
+                    if h5file['DielectricParameters/columns'][()][2] in [b'w [micron]',b'w [m]',b'w [cm]']:
+                        print('Old Field Type')
+                    else:
+                        self._DielectricParameter['w'] = 0
+                        self._DielectricParameter['y0'] = parameter_array[4][0];
+                        self._DielectricParameter['x0'] = parameter_array[3][0];
             if h5file.get('DielectricForces/ForceField') is not None:
                 x, y, z, Fx, Fy, Fz = np.array(h5file.get('DielectricForces/ForceField')).transpose()
                 self._FieldPoints['x'] = x
@@ -100,9 +105,14 @@ class DiWaCATOutput(object):
                 self._DielectricParameter['y0'] = parameter_array[5][0];
                 self._DielectricParameter['x0'] = parameter_array[4][0];
                 if (len(parameter_array)<10):
-                    self._DielectricParameter['w'] = 0
-                    self._DielectricParameter['y0'] = parameter_array[4][0];
-                    self._DielectricParameter['x0'] = parameter_array[3][0];
+                    #Also check the field calculated isn't in the old format
+                    print(h5file['DielectricParameters/columns'][()][2][0])
+                    if h5file['DielectricParameters/columns'][()][2] in [b'w [micron]',b'w [m]',b'w [cm]']:
+                        print('Old Field Type')
+                    else:
+                        self._DielectricParameter['w'] = 0
+                        self._DielectricParameter['y0'] = parameter_array[4][0];
+                        self._DielectricParameter['x0'] = parameter_array[3][0];
             if h5file.get('DielectricForces/ForceField') is not None:
                 x, y, z, Fx, Fy, Fz = np.array(h5file.get('DielectricForces/ForceField')).transpose()
                 self._FieldPoints['x'] = x
