@@ -489,7 +489,6 @@ class BeamTrackWindow(QWidget):
         self.epsYPlot.plot(self.LengthArray,self.epsy, pen = 'k')
         self.ChargePlot.plot(self.LengthArray,self.Charge, pen = 'k')
 
-
    
 class MainWindow(QMainWindow):
 
@@ -527,6 +526,10 @@ class MainWindow(QMainWindow):
         MainBoxLayout.addWidget(SimulateButton, 3, 0,1,2)
         SimulateButton.clicked.connect(self.SimulateBeamWindow)
         
+        BeamToolsButton = pyqt.QPushButton("Beam Manipulation Tools");
+        BeamToolsButton.setStyleSheet("background-color: rgb(90,215,120)")
+        MainBoxLayout.addWidget(BeamToolsButton, 4, 0,1,2)
+        BeamToolsButton.clicked.connect(self.BeamManipulateOpen)
         
         widget = pyqt.QWidget()
         widget.setLayout(MainBoxLayout)
@@ -556,6 +559,8 @@ class MainWindow(QMainWindow):
         self.g = FieldCalcWindow.CalculationWindow()
         self.g.show()
         #popen = subprocess.Popen(["./FieldSolver_Executable/DiWaCAT_FieldSolverUI.exe"])
+    
+
         
 if __name__ == '__main__':
     app = QApplication(sys.argv)

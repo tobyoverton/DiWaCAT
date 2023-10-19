@@ -381,7 +381,9 @@ class GeneralBeam(object):
     @property
     def y(self):
         return self._beam['y']
-
+    @property
+    def r(self):
+        return np.sqrt(self._beam['x']**2 + self._beam['y']**2)
     @property
     def z(self):
         return self._beam['z']

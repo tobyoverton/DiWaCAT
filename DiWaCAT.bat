@@ -19,6 +19,7 @@ set PIP_ERRORLEVEL=%ERRORLEVEL%
 
 if %PIP_ERRORLEVEL% neq 0 (
     echo Failed to install some dependencies. Continuing anyway...
+	pause
 )
 
 echo Attempting to Build Cpp Library
@@ -38,12 +39,14 @@ if %PYTHON_ARCH%==64 (
 cmake -DCMAKE_BUILD_TYPE=Release -Dpybind11_DIR=!PYBIND11_PATH! -A !CMAKE_ARCH! ..
 if errorlevel 1 (
     echo CMake configuration failed!
+	pause
     exit /b 1
 )
 echo Building with CMake...
 cmake --build . --config Release
 if errorlevel 1 (
     echo CMake build failed!
+	pause
     exit /b 1
 )
 
