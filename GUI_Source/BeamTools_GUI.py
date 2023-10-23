@@ -321,28 +321,29 @@ class BeamToolsWindow(QWidget):
     def ApplyFunction(self):
         if len(self.beamList)>0:
             beamnew = self.beamList[-1].returnBeam()
+            beamlabelpreppend = 'Beam' + str(len(self.beamList) + 1) + '_'
             if self.ManipulationFunctionTabs.currentIndex() == 0:
                 beamnew.thinLensFQuadBeam(self.FocalLength.value() * UnitConversion(self.FocalLengthScale.currentText()))
                 self.beamList = np.append(self.beamList,beamnew)
-                self.beamListLabels = np.append(self.beamListLabels, 'thinQuad_f_'+str(self.FocalLength.value())+'_'+self.FocalLengthScale.currentText())
+                self.beamListLabels = np.append(self.beamListLabels, beamlabelpreppend+'thinQuad_f_'+str(self.FocalLength.value())+'_'+self.FocalLengthScale.currentText())
             if self.ManipulationFunctionTabs.currentIndex() == 1:
                 beamnew.thickQuadBeam(self.ThickQuadStrength.value() * UnitConversion(self.ThickQuadStrengthScale.currentText()),self.ThickQuadLength.value() * UnitConversion(self.ThickQuadLengthScale.currentText()))
                 beamnew._beam['z'] = beamnew._beam['z'] - self.ThickQuadLength.value() * UnitConversion(self.ThickQuadLengthScale.currentText())
                 self.beamList = np.append(self.beamList,beamnew)
-                self.beamListLabels = np.append(self.beamListLabels, 'thickQuad_K_'+str(self.ThickQuadStrength.value())+'_'+self.ThickQuadStrengthScale.currentText()+'L_'+str(self.ThickQuadLength.value())+'_'+self.ThickQuadLengthScale.currentText())
+                self.beamListLabels = np.append(self.beamListLabels,beamlabelpreppend+ 'thickQuad_K_'+str(self.ThickQuadStrength.value())+'_'+self.ThickQuadStrengthScale.currentText()+'L_'+str(self.ThickQuadLength.value())+'_'+self.ThickQuadLengthScale.currentText())
             if self.ManipulationFunctionTabs.currentIndex() == 2:
                 print('Dipole Function not Written')
                 self.beamList = np.append(self.beamList,beamnew)
-                self.beamListLabels = np.append(self.beamListLabels, 'Drift_0')
+                self.beamListLabels = np.append(self.beamListLabels,beamlabelpreppend+ 'Drift_0')
             if self.ManipulationFunctionTabs.currentIndex() == 3:
                 beamnew.driftBeam(self.DriftDistance.value() * UnitConversion(self.DriftScale.currentText()))
                 beamnew._beam['z'] = beamnew._beam['z'] - self.DriftDistance.value() * UnitConversion(self.DriftScale.currentText())
                 self.beamList = np.append(self.beamList,beamnew)
-                self.beamListLabels = np.append(self.beamListLabels, 'Drift_'+str(self.DriftDistance.value())+'_'+self.DriftScale.currentText())
+                self.beamListLabels = np.append(self.beamListLabels, beamlabelpreppend+'Drift_'+str(self.DriftDistance.value())+'_'+self.DriftScale.currentText())
             if self.ManipulationFunctionTabs.currentIndex() == 4:
                 beamnew.collimateBeam(self.CollimationVariable.currentText(), self.CollimationMin.value() * UnitConversion(self.CollimationScale.currentText()), self.CollimationMax.value() * UnitConversion(self.CollimationScale.currentText()))
                 self.beamList = np.append(self.beamList,beamnew)
-                self.beamListLabels = np.append(self.beamListLabels, 'Collimation_'+self.CollimationVariable.currentText() + '_'+self.CollimationScale.currentText() + '_' + str(self.CollimationMin.value())+ '_' + str(self.CollimationMax.value()) + self.CollimationScale.currentText())
+                self.beamListLabels = np.append(self.beamListLabels,beamlabelpreppend+ 'Collimation_'+self.CollimationVariable.currentText() + '_'+self.CollimationScale.currentText() + '_' + str(self.CollimationMin.value())+ '_' + str(self.CollimationMax.value()) + self.CollimationScale.currentText())
 
             self.BeamListWidget.addItem(self.beamListLabels[-1])
             self.CurrentBeam.setText(self.beamListLabels[-1])
