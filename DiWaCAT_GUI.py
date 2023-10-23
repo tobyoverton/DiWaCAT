@@ -24,7 +24,7 @@ os.chdir(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(os.path.dirname(__file__))
 
 #Import the files with each GUI window and functions
-from GUI_Source import BeamMakeWindow, BeamMeshWindow, FieldPlotter, BeamPlotter, FieldCalcWindow#, DiWaCAT_Tracker
+from GUI_Source import BeamMakeWindow, BeamMeshWindow, FieldPlotter, BeamPlotter, FieldCalcWindow, BeamTools_GUI#, DiWaCAT_Tracker
 
 def UnitConversion(prefix):
     if prefix == 'unit' or prefix == 'Unit':
@@ -560,7 +560,9 @@ class MainWindow(QMainWindow):
         self.g.show()
         #popen = subprocess.Popen(["./FieldSolver_Executable/DiWaCAT_FieldSolverUI.exe"])
     
-
+    def BeamManipulateOpen(self,checked):
+        self.h = BeamTools_GUI.BeamToolsWindow()
+        self.h.show()
         
 if __name__ == '__main__':
     app = QApplication(sys.argv)

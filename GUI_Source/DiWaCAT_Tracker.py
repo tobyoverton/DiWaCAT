@@ -70,10 +70,10 @@ class BeamTrackFunction(QThread):
             if __name__ == '__main__':
                 pool = mp.Pool(10)
                 args = [(CurrentBeam, pos) for pos in MacroPositions]
-                KicksApplied = pool.starmap(WorkerFunction_Interpolation, args)
+                KicksApplied = pool.starmap(WorkerFunction_Interpolation, args)       
                 pool.close()
-                pool.join()       
-            
+                pool.join()
+            print(KicksApplied[100])
             KicksApplied = np.array(KicksApplied)
             xKick = np.array(KicksApplied[:,0,0])
             yKick = np.array(KicksApplied[:,1,0])
@@ -114,8 +114,8 @@ class BeamTrackFunction(QThread):
             self.newbeam.emit(CurrentBeam)
             
         self.finished.emit()
-    def stop(self):
-        self._isRunning = False
+    #def stop(self):
+    #    self._isRunning = False
             
 class BeamTrackWindow(QWidget):
     '''

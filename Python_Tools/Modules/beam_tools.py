@@ -268,6 +268,30 @@ class GeneralBeam(object):
         self._beam['py'] = self._angle_to_mom(new_yp, self.pz)
 
         self._beam['z'] = self.z + L
+        
+    def collimateBeam(self, var: str, limlow, limhigh):
+        """
+        Take beam and
+        """
+        if var == 'r':
+            selected_macros_index = np.where(np.logical_and(self.r > limlow,
+                                                    self.r < limhigh))
+        else:
+            assert var in self._beam
+            selected_macros_index = np.where(np.logical_and(self._beam[var] > limlow,
+                                                    self._beam[var] < limhigh))
+        self._beam['x'] = self._beam['x'][selected_macros_index]
+        self._beam['px'] = self._beam['px'][selected_macros_index]
+
+        self._beam['y'] = self._beam['y'][selected_macros_index]
+        self._beam['py'] = self._beam['py'][selected_macros_index]
+
+        self._beam['z'] = self._beam['z'][selected_macros_index]
+        self._beam['t'] = self._beam['t'][selected_macros_index]
+        self._beam['pz'] = self._beam['pz'][selected_macros_index]
+        
+        self._beam['charge'] = self._beam['charge'][selected_macros_index]
+        
 
     def thickWakeQuadBeam(self,dk_dz,k0,L):
         """
@@ -356,6 +380,7 @@ class GeneralBeam(object):
             'x': 'm',
             'y': 'm',
             'z': 'm',
+            'r': 'm',
             'zn': 'm',
             't': 's',
             'charge': 'C',
@@ -381,9 +406,7 @@ class GeneralBeam(object):
     @property
     def y(self):
         return self._beam['y']
-    @property
-    def r(self):
-        return np.sqrt(self._beam['x']**2 + self._beam['y']**2)
+    
     @property
     def z(self):
         return self._beam['z']
@@ -429,7 +452,9 @@ class GeneralBeam(object):
 
     # ---------------------------------------------------------------------------
     # = properties that are defined from others
-
+    @property
+    def r(self):
+        return np.sqrt(self.x**2 + self.y**2)
     @property
     def charge_per_macro(self):
         if self.macro_type == 'fixed_weight':
@@ -1893,8 +1918,11 @@ class BeamSlicer(object):
     def add_beam_slice(self, p_min, p_max):
         # check the parameter to slice is in the beam dict!
         assert p_min < p_max
-
-        selected_macros_index = np.where(np.logical_and(self.beam._beam[self.parameter] > p_min,
+        if self.parameter == 'r':
+            selected_macros_index = np.where(np.logical_and(self.beam.r > p_min,
+                                                        self.beam.r < p_max))
+        else:
+            selected_macros_index = np.where(np.logical_and(self.beam._beam[self.parameter] > p_min,
                                                         self.beam._beam[self.parameter] < p_max))
 
         print("selected this many macros", np.shape(selected_macros_index))
@@ -1909,6 +1937,9 @@ class BeamSlicer(object):
         sliced_beam._beam['py'] = self.beam._beam['py'][selected_macros_index]
 
         sliced_beam._beam['z'] = self.beam._beam['z'][selected_macros_index]
+        sliced_beam._beam['t'] = self.beam._beam['t'][selected_macros_index]
         sliced_beam._beam['pz'] = self.beam._beam['pz'][selected_macros_index]
+        
+        sliced_beam._beam['charge'] = self.beam._beam['charge'][selected_macros_index]
 
         self.sliced_beams.append(sliced_beam)
