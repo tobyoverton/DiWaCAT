@@ -304,7 +304,7 @@ class BeamToolsWindow(QWidget):
         filename, ok = pyqt.QFileDialog.getSaveFileName(self,"Save File Name", "", "HDF5 Files (*.h5)")
         if filename:
             path = Path(filename)
-            beamSelected.write_HDF5_beam_file(path)
+            beamSelected.write_HDF5_beam_file(path,overwrite_existing_file=True)
         else:
             print('Beam Not Saved')
     def SaveAll(self):
@@ -327,6 +327,7 @@ class BeamToolsWindow(QWidget):
                 self.beamListLabels = np.append(self.beamListLabels, 'thinQuad_f_'+str(self.FocalLength.value())+'_'+self.FocalLengthScale.currentText())
             if self.ManipulationFunctionTabs.currentIndex() == 1:
                 beamnew.thickQuadBeam(self.ThickQuadStrength.value() * UnitConversion(self.ThickQuadStrengthScale.currentText()),self.ThickQuadLength.value() * UnitConversion(self.ThickQuadLengthScale.currentText()))
+                beamnew._beam['z'] = beamnew._beam['z'] - self.ThickQuadLength.value() * UnitConversion(self.ThickQuadLengthScale.currentText())
                 self.beamList = np.append(self.beamList,beamnew)
                 self.beamListLabels = np.append(self.beamListLabels, 'thickQuad_K_'+str(self.ThickQuadStrength.value())+'_'+self.ThickQuadStrengthScale.currentText()+'L_'+str(self.ThickQuadLength.value())+'_'+self.ThickQuadLengthScale.currentText())
             if self.ManipulationFunctionTabs.currentIndex() == 2:
@@ -335,6 +336,7 @@ class BeamToolsWindow(QWidget):
                 self.beamListLabels = np.append(self.beamListLabels, 'Drift_0')
             if self.ManipulationFunctionTabs.currentIndex() == 3:
                 beamnew.driftBeam(self.DriftDistance.value() * UnitConversion(self.DriftScale.currentText()))
+                beamnew._beam['z'] = beamnew._beam['z'] - self.DriftDistance.value() * UnitConversion(self.DriftScale.currentText())
                 self.beamList = np.append(self.beamList,beamnew)
                 self.beamListLabels = np.append(self.beamListLabels, 'Drift_'+str(self.DriftDistance.value())+'_'+self.DriftScale.currentText())
             if self.ManipulationFunctionTabs.currentIndex() == 4:
