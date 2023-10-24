@@ -393,13 +393,13 @@ class DiWaCAT_FieldCalc(dbt.BeamFromFile):
             fieldgrp['columns'] = np.array(['x [m]', 'y [m]', 'z [m]', 'Fx [eV]', 'Fy [eV]', 'Ez [eV]'], dtype='S')
             parametergrp = f.create_group("DielectricParameters")
             if self.Geometry == 'c':
-                parameters = np.array([[self.b*1e4, self.delta*1e4, self.x0*0.01, self.y0*0.01, self.Ep, self.Mu, self.nR, self.nTheta]]).transpose()
+                parameters = np.array([[self.b*1e4, self.delta*1e4,0, self.x0*0.01, self.y0*0.01, self.Ep, self.Mu, self.nR, self.nTheta]]).transpose()
                 parametergrp.create_dataset("Parameters", data = parameters)
-                parametergrp['columns'] = np.array(['a [micron]', 'delta [micron]', 'x0 [m]', 'y0 [m]', 'Permitivity', 'Permeability', 'nR Modes', 'nTheta Modes'], dtype='S')            
+                parametergrp['columns'] = np.array(['a [micron]', 'delta [micron]', 'Structure Length [m]','x0 [m]', 'y0 [m]', 'Permitivity', 'Permeability', 'nR Modes', 'nTheta Modes'], dtype='S')            
             else:
-                parameters = np.array([[self.b*1e4, self.delta*1e4, self.w*1e4, self.x0*0.01, self.y0*0.01, self.Ep, self.Mu, self.sN, self.sI]]).transpose()
+                parameters = np.array([[self.b*1e4, self.delta*1e4, self.w*1e4, 0, self.x0*0.01, self.y0*0.01, self.Ep, self.Mu, self.sN, self.sI]]).transpose()
                 parametergrp.create_dataset("Parameters", data = parameters)
-                parametergrp['columns'] = np.array(['a [micron]', 'delta [micron]', 'w [micron]', 'x0 [m]', 'y0 [m]', 'Permitivity', 'Permeability', 'nX Modes', 'nY Modes'], dtype='S')
+                parametergrp['columns'] = np.array(['a [micron]', 'delta [micron]', 'w [micron]','Structure Length [m]', 'x0 [m]', 'y0 [m]', 'Permitivity', 'Permeability', 'nX Modes', 'nY Modes'], dtype='S')
             
 
         return os.path.isfile(filename)  # because we wrote a file!
