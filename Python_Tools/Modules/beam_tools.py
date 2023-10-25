@@ -1887,7 +1887,8 @@ class BeamSlicer(object):
         self.beam = beam
 
         self.parameter = slice_parameter
-        assert self.parameter in self.beam._beam
+        if self.parameter != 'r':
+            assert self.parameter in self.beam._beam
 
         # store the slices in an array...
         self.sliced_beams = []
