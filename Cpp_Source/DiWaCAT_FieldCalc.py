@@ -309,7 +309,7 @@ class DiWaCAT_FieldCalc(dbt.BeamFromFile):
             if self.Geometry == 'h':
                 Fx,Fy,Ez = DiWaCAT.TotalForceMeshHDF5(Ez, Fx, Fy, nParticle, 0, self.x0, 0, self.y0, 0, np.min(self.zMacros), np.max(self.zMacros), self.z0, self.xMacros, self.yMacros, self.zMacros, zeroesES, zeroesEA, zeroesHS, zeroesHA, self.sN, self.sI, self.Ep, self.Mu, B2, self.b, self.c, self.w, self.MacroCharge)
             elif self.Geometry == 'v':
-                Fx,Fy,Ez = DiWaCAT.TotalForceMeshHDF5VerticalPlate(Ez, Fx, Fy, nParticle, 0, self.x0, 0, self.y0, 0, np.min(self.zMacros), np.max(self.zMacros), self.z0, self.xMacros, self.yMacros, self.zMacros, zeroesES, zeroesEA, zeroesHS, zeroesHA, self.sN, self.sI, self.Ep, self.Mu, B2, self.b, self.c, self.w, self.MacroCharge)
+                Fy,Fx,Ez = DiWaCAT.TotalForceMeshHDF5VerticalPlate(Ez, Fx, Fy, nParticle, 0, self.x0, 0, self.y0, 0, np.min(self.zMacros), np.max(self.zMacros), self.z0, self.xMacros, self.yMacros, self.zMacros, zeroesES, zeroesEA, zeroesHS, zeroesHA, self.sN, self.sI, self.Ep, self.Mu, B2, self.b, self.c, self.w, self.MacroCharge)
             #Store the calculated fields
             self._Field['Fx'] = Fx
             self._Field['Fy'] = Fy

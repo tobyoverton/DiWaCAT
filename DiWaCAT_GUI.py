@@ -94,8 +94,13 @@ class BeamTrackFunction(QThread):
                     CurrentBeam.beam._beam['charge'][LostParticles] = 0;
                     
                 else:
-                    LostParticlesY = [n for n,i in enumerate(CurrentBeam.beam._beam['y']) if abs(i+CurrentBeam._DielectricParameter['y0']) > CurrentBeam._DielectricParameter['a']]
-                    LostParticlesX = [n for n,i in enumerate(CurrentBeam.beam._beam['x']) if abs(i+CurrentBeam._DielectricParameter['x0']) > CurrentBeam._DielectricParameter['w']]
+                    #Need a cheaty way to check if the orientation is H or V. Typical to assume that direction with largest offset is the metal boundary
+                    if (CurrentBeam._DielectricParameter['x0'] > CurrentBeam._DielectricParameter['y0']):
+                        LostParticlesY = [n for n,i in enumerate(CurrentBeam.beam._beam['y']) if abs(i+CurrentBeam._DielectricParameter['y0']) > CurrentBeam._DielectricParameter['a']]
+                        LostParticlesX = [n for n,i in enumerate(CurrentBeam.beam._beam['x']) if abs(i+CurrentBeam._DielectricParameter['x0']) > CurrentBeam._DielectricParameter['w']]
+                    else:
+                        LostParticlesY = [n for n,i in enumerate(CurrentBeam.beam._beam['y']) if abs(i+CurrentBeam._DielectricParameter['y0']) > CurrentBeam._DielectricParameter['w']]
+                        LostParticlesX = [n for n,i in enumerate(CurrentBeam.beam._beam['x']) if abs(i+CurrentBeam._DielectricParameter['x0']) > CurrentBeam._DielectricParameter['a']]
                     CurrentBeam.beam._beam['charge'][LostParticlesY] = 0;
                     CurrentBeam.beam._beam['charge'][LostParticlesX] = 0;
                 macro_select = np.nonzero(CurrentBeam.beam._beam['charge'])
