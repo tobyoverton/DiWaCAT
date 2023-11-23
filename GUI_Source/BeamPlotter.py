@@ -10,6 +10,7 @@ Print beam properties
 """
 
 from PyQt5.QtWidgets import QWidget
+from PyQt5.QtGui import QFont
 import PyQt5.QtWidgets as pyqt
 import pyqtgraph as pg
 import numpy as np
@@ -158,9 +159,18 @@ class BeamPlotWindow(QWidget):
         self.BeamPlotLayout.addWidget(pyqt.QLabel('Scatter Point Opacity [%]'),5,0,1,2)
         self.BeamPlotLayout.addWidget(self.PlotOpacity,5,2,1,1)
         
+        self.FontSelect = pyqt.QComboBox()
+        self.FontSelect.addItems(["Times","Arial", "Helvetica", "Serif"])
+        self.FontSize = pyqt.QSpinBox()
+        self.FontSize.setRange(1, 30)
+        self.FontSize.setValue(8)
+        self.BeamPlotLayout.addWidget(pyqt.QLabel('Font Style/Size'), 6, 0, 1, 1)
+        self.BeamPlotLayout.addWidget(self.FontSelect, 6, 1, 1, 1)
+        self.BeamPlotLayout.addWidget(self.FontSize, 6, 2, 1, 1)
+        
         self.UpdatePlotButton = pyqt.QPushButton('Update Plots')
         self.UpdatePlotButton.clicked.connect(self.UpdatePlots)
-        self.BeamPlotLayout.addWidget(self.UpdatePlotButton,6,0,1,3)
+        self.BeamPlotLayout.addWidget(self.UpdatePlotButton,7,0,1,3)
         
         #Create the plots
         
@@ -207,9 +217,9 @@ class BeamPlotWindow(QWidget):
             plot_item.getAxis('left').setTextPen('k')
             
         
-        self.BeamPlotLayout.addWidget(self.XAxisHistogram,0,4,7,6)
-        self.BeamPlotLayout.addWidget(self.YAxisHistogram,7,0,14,3)
-        self.BeamPlotLayout.addWidget(self.ScatterPlot,7,4,14,6)
+        self.BeamPlotLayout.addWidget(self.XAxisHistogram,0,4,8,6)
+        self.BeamPlotLayout.addWidget(self.YAxisHistogram,8,0,14,3)
+        self.BeamPlotLayout.addWidget(self.ScatterPlot,8,4,14,6)
         
         
         self.TotalLayout.addLayout(self.BeamsLayout,0,0)
@@ -315,9 +325,23 @@ class BeamPlotWindow(QWidget):
                 self.YAxisHistogram.addItem(self.YAxisHist)
                 #self.YAxisHistogram.getPlotItem(self.YAxisHist).invertX(True)
                 
+            self.ScatterPlot.autoRange()
                 
             self.ScatterPlot.addLegend()
             self.ScatterPlot.setLabel('bottom', self.XAxisLabel.text())
             self.ScatterPlot.setLabel('left', self.YAxisLabel.text())
             self.XAxisHistogram.setLabel('bottom', self.XAxisLabel.text())
             self.YAxisHistogram.setLabel('left', self.YAxisLabel.text())
+            Font = QFont(self.FontSelect.currentText(), self.FontSize.value())
+            self.ScatterPlot.getAxis("bottom").setStyle(tickFont = Font)
+            self.ScatterPlot.getAxis("left").setStyle(tickFont = Font)
+            self.ScatterPlot.getAxis("bottom").label.setFont(Font)
+            self.ScatterPlot. getAxis("left").label.setFont(Font)
+            self.XAxisHistogram.getAxis("bottom").setStyle(tickFont = Font)
+            self.XAxisHistogram.getAxis("left").setStyle(tickFont = Font)
+            self.XAxisHistogram.getAxis("bottom").label.setFont(Font)
+            self.XAxisHistogram. getAxis("left").label.setFont(Font)
+            self.YAxisHistogram.getAxis("bottom").setStyle(tickFont = Font)
+            self.YAxisHistogram.getAxis("left").setStyle(tickFont = Font)
+            self.YAxisHistogram.getAxis("bottom").label.setFont(Font)
+            self.YAxisHistogram. getAxis("left").label.setFont(Font)

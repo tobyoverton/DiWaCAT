@@ -7,9 +7,10 @@ DiWaCAT GUI using PyQT
 
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtGui import QFont
 import PyQt5.QtWidgets as pyqt
 from PyQt5.QtCore import QThread,pyqtSignal
-import sys, os, subprocess
+import sys, os
 from pathos.helpers import mp
 import scipy.constants as const
 import numpy as np
@@ -24,14 +25,80 @@ os.chdir(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(os.path.dirname(__file__))
 
 #Import the files with each GUI window and functions
-from GUI_Source import BeamMakeWindow, BeamMeshWindow, FieldPlotter, BeamPlotter, FieldCalcWindow#, DiWaCAT_Tracker
+from GUI_Source import BeamMakeWindow, BeamMeshWindow, FieldPlotter, BeamPlotter, FieldCalcWindow, BeamTools_GUI#, DiWaCAT_Tracker
 
-#Issue with multithreading when using imported file. Temporary fix to include the functions in the GUI file
 def UnitConversion(prefix):
     if prefix == 'unit' or prefix == 'Unit':
         return 1
     else:
         return 1/getattr(const, prefix)
+    
+class beamTrackPlot(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.layout = pyqt.QGridLayout()
+        
+        self.variableSelect = pyqt.QComboBox()
+        self.BeamPropertyList = ['Total Charge','RMS Size - X', 'RMS Size - Y','RMS Size - Z', 'RMS Size - T', 'RMS Momentum Spread', 'Emittance - X', 'Emittance - Y', 
+                            'Mean Position - X','Mean Position - Y','Mean Position - Z', 'Alpha - X', 'Alpha - Y', 'Beta - X', 'Beta - Y',
+                            'Gamma - X', 'Gamma - Y', '95% RMS Size - X', '95% RMS Size - Y', '95% RMS Size - Z','95% RMS Size - T',
+                            '90% Emittance - X', '90% Emittance - Y', 'Number of Macros']
+        self.BeamProperties = ['total_charge', 'Sx', 'Sy', 'Sz', 'Sz * 1/const.c', 'Spz', 'normalized_horizontal_emittance', 'normalized_vertical_emittance',
+                               'Mx', 'My', 'Mz', 'alpha_x', 'alpha_y', 'beta_x', 'beta_y', 'gamma_x', 'gamma_y', 'Sx_95', 'Sy_95',
+                               'Sz_95','Sz_95 * 1/const.c', 'normalized_horizontal_emittance_90', 'normalized_vertical_emittance_90',
+                               'nMacros']
+        self.PropertyLabel = ['C', 'm', 'm', 'm', 's', 'eV/c', 'm rad', 'm rad', 'm', 'm', 'm', 'm/rad', 'm/rad', 'm', 'm', '', '', 'm', 'm', 'm', 's', 'm rad', 'm rad', '']
+        self.variableSelect.addItems(self.BeamPropertyList)
+        self.variableSelect.currentIndexChanged.connect(self.plotChange)
+        
+        self.variableScale = pyqt.QComboBox()
+        self.scalelist = ['','k', 'M', 'm', 'u', 'n', 'p', 'f', 'c']
+        self.variableScale.addItems(['unit', 'kilo', 'mega', 'milli', 'micro', 'nano', 'pico', 'femto', 'centi'])
+        self.variableScale.currentIndexChanged.connect(self.plotChange)
+        
+        self.plotItem = pg.PlotWidget()
+        self.XArray = []
+        self.YArray = []
+        self.Beams = []
+        self.plotItem.setBackground('w')
+        self.plotItem.getAxis('bottom').setPen('k')
+        self.plotItem.getAxis('left').setPen('k')
+        self.plotItem.getAxis('bottom').setTextPen('k')
+        self.plotItem.getAxis('left').setTextPen('k')
+        self.plotItem.setLabel('bottom', 'L [m]')        
+        self.lineplot = pg.PlotDataItem(self.XArray,self.YArray, pen = 'k')
+        self.plotItem.addItem(self.lineplot)
+        
+        self.layout.addWidget(self.variableSelect, 0, 0, 1, 1)
+        self.layout.addWidget(self.variableScale, 0, 1, 1, 1)
+        self.layout.addWidget (self.plotItem, 1, 0, 1, 2)
+        self.setLayout(self.layout)
+
+    def replot(self, BeamList, distanceList):
+        self.Beams = BeamList
+        self.XArray = distanceList
+        self.YArray = np.zeros(len(self.XArray))
+        selectedproperty =  self.BeamProperties[self.variableSelect.currentIndex()]
+        for i in range(len(self.Beams)):
+            if selectedproperty == 'Spz':
+                self.YArray[i] = np.sqrt(self.Beams[i].covariance(self.Beams[i].cpz, self.Beams[i].cpz)) * UnitConversion(self.variableScale.currentText())
+            else:
+                self.YArray[i] = eval('self.Beams[i].' + selectedproperty) * UnitConversion(self.variableScale.currentText())
+        self.lineplot.setData(self.XArray, self.YArray)
+        self.plotItem.autoRange()
+            
+    def plotChange(self):
+        yAxisLabel = self.BeamPropertyList[self.variableSelect.currentIndex()] + ' [' + self.scalelist[self.variableScale.currentIndex()] + self.PropertyLabel[self.variableSelect.currentIndex()] + ']'
+        self.plotItem.setLabel('left', yAxisLabel)
+        if len(self.Beams) > 0:
+            selectedproperty = self.BeamProperties[self.variableSelect.currentIndex()]
+            for i in range(len(self.Beams)):
+                if selectedproperty == 'Spz':
+                    self.YArray[i] = np.sqrt(self.Beams[i].covariance(self.Beams[i].cpz, self.Beams[i].cpz)) * UnitConversion(self.variableScale.currentText())
+                else:
+                    self.YArray[i] = eval('self.Beams[i].' + selectedproperty) * UnitConversion(self.variableScale.currentText())
+            self.lineplot.setData(self.XArray, self.YArray)
+            self.plotItem.autoRange()
    
 def WorkerFunction_Interpolation(beam, position):
     return beam.ReturnFieldInterpolated(position)
@@ -72,43 +139,49 @@ class BeamTrackFunction(QThread):
                 KicksApplied = pool.starmap(WorkerFunction_Interpolation, args)       
                 pool.close()
                 pool.join()
-            print(KicksApplied[100])
-            KicksApplied = np.array(KicksApplied)
-            xKick = np.array(KicksApplied[:,0,0])
-            yKick = np.array(KicksApplied[:,1,0])
-            zKick = np.array(KicksApplied[:,2,0])
-            #Drift the beam to the end of the step and then apply the 
-            
-            CurrentBeam.driftBeam(0.5 * StepLength)
-            #CurrentBeam.beam._beam['px'] += StepLength * KicksApplied[:,0] * CurrentBeam.beam.q_over_c
-            #CurrentBeam.beam._beam['py'] += StepLength * KicksApplied[:,1] * CurrentBeam.beam.q_over_c
-            #CurrentBeam.beam._beam['pz'] += StepLength * KicksApplied[:,2] * CurrentBeam.beam.q_over_c
-            CurrentBeam.beam._beam['px'] += StepLength * xKick * CurrentBeam.beam.q_over_c
-            CurrentBeam.beam._beam['py'] += StepLength * yKick * CurrentBeam.beam.q_over_c
-            CurrentBeam.beam._beam['pz'] += StepLength * zKick * CurrentBeam.beam.q_over_c
-            
-            #Clear lost particles
-            if CurrentBeam._DielectricParameter['w'] == 0:
-                Boundary = CurrentBeam._DielectricParameter['a']
-                RadialPositions = np.sqrt((CurrentBeam.beam.x+CurrentBeam._DielectricParameter['x0'])**2 + (CurrentBeam.beam.y+CurrentBeam._DielectricParameter['y0'])**2)
-                LostParticles = [n for n,i in enumerate(RadialPositions) if i>Boundary]
-                CurrentBeam.beam._beam['charge'][LostParticles] = 0;
-            else:
-                LostParticlesY = [n for n,i in enumerate(CurrentBeam.beam._beam['y']) if abs(i+CurrentBeam._DielectricParameter['y0']) > CurrentBeam._DielectricParameter['a']]
-                LostParticlesX = [n for n,i in enumerate(CurrentBeam.beam._beam['x']) if abs(i+CurrentBeam._DielectricParameter['x0']) > CurrentBeam._DielectricParameter['w']]
-                CurrentBeam.beam._beam['charge'][LostParticlesY] = 0;
-                CurrentBeam.beam._beam['charge'][LostParticlesX] = 0;
-            macro_select = np.nonzero(CurrentBeam.beam._beam['charge'])
-            
-            CurrentBeam.beam._beam['x'] = CurrentBeam.beam._beam['x'][macro_select]
-            CurrentBeam.beam._beam['y'] = CurrentBeam.beam._beam['y'][macro_select]
-            CurrentBeam.beam._beam['z'] = CurrentBeam.beam._beam['z'][macro_select]
-            CurrentBeam.beam._beam['px'] = CurrentBeam.beam._beam['px'][macro_select]
-            CurrentBeam.beam._beam['py'] = CurrentBeam.beam._beam['py'][macro_select]
-            CurrentBeam.beam._beam['pz'] = CurrentBeam.beam._beam['pz'][macro_select]
-            CurrentBeam.beam._beam['t'] = CurrentBeam.beam._beam['t'][macro_select]
-            CurrentBeam.beam._beam['charge'] = CurrentBeam.beam._beam['charge'][macro_select]
-            
+            if (len(KicksApplied) > 0):
+                KicksApplied = np.array(KicksApplied)
+                xKick = np.array(KicksApplied[:,0,0])
+                yKick = np.array(KicksApplied[:,1,0])
+                zKick = np.array(KicksApplied[:,2,0])
+                #Drift the beam to the end of the step and then apply the 
+                
+                CurrentBeam.driftBeam(0.5 * StepLength)
+                #CurrentBeam.beam._beam['px'] += StepLength * KicksApplied[:,0] * CurrentBeam.beam.q_over_c
+                #CurrentBeam.beam._beam['py'] += StepLength * KicksApplied[:,1] * CurrentBeam.beam.q_over_c
+                #CurrentBeam.beam._beam['pz'] += StepLength * KicksApplied[:,2] * CurrentBeam.beam.q_over_c
+                CurrentBeam.beam._beam['px'] += StepLength * xKick * CurrentBeam.beam.q_over_c
+                CurrentBeam.beam._beam['py'] += StepLength * yKick * CurrentBeam.beam.q_over_c
+                CurrentBeam.beam._beam['pz'] += StepLength * zKick * CurrentBeam.beam.q_over_c
+                
+                #Clear lost particles
+                if CurrentBeam._DielectricParameter['w'] == 0:
+                    Boundary = CurrentBeam._DielectricParameter['a']
+                    RadialPositions = np.sqrt((CurrentBeam.beam._beam['x']+CurrentBeam._DielectricParameter['x0'])**2 + (CurrentBeam.beam._beam['y']+CurrentBeam._DielectricParameter['y0'])**2)
+                    LostParticles = [n for n,i in enumerate(RadialPositions) if i>Boundary]
+                    CurrentBeam.beam._beam['charge'][LostParticles] = 0;
+                    
+                else:
+                    #Need a cheaty way to check if the orientation is H or V. Typical to assume that direction with largest offset is the metal boundary
+                    if (CurrentBeam._DielectricParameter['x0'] > CurrentBeam._DielectricParameter['y0']):
+                        LostParticlesY = [n for n,i in enumerate(CurrentBeam.beam._beam['y']) if abs(i+CurrentBeam._DielectricParameter['y0']) > CurrentBeam._DielectricParameter['a']]
+                        LostParticlesX = [n for n,i in enumerate(CurrentBeam.beam._beam['x']) if abs(i+CurrentBeam._DielectricParameter['x0']) > CurrentBeam._DielectricParameter['w']]
+                    else:
+                        LostParticlesY = [n for n,i in enumerate(CurrentBeam.beam._beam['y']) if abs(i+CurrentBeam._DielectricParameter['y0']) > CurrentBeam._DielectricParameter['w']]
+                        LostParticlesX = [n for n,i in enumerate(CurrentBeam.beam._beam['x']) if abs(i+CurrentBeam._DielectricParameter['x0']) > CurrentBeam._DielectricParameter['a']]
+                    CurrentBeam.beam._beam['charge'][LostParticlesY] = 0;
+                    CurrentBeam.beam._beam['charge'][LostParticlesX] = 0;
+                macro_select = np.nonzero(CurrentBeam.beam._beam['charge'])
+                
+                CurrentBeam.beam._beam['x'] = CurrentBeam.beam._beam['x'][macro_select]
+                CurrentBeam.beam._beam['y'] = CurrentBeam.beam._beam['y'][macro_select]
+                CurrentBeam.beam._beam['z'] = CurrentBeam.beam._beam['z'][macro_select]
+                CurrentBeam.beam._beam['px'] = CurrentBeam.beam._beam['px'][macro_select]
+                CurrentBeam.beam._beam['py'] = CurrentBeam.beam._beam['py'][macro_select]
+                CurrentBeam.beam._beam['pz'] = CurrentBeam.beam._beam['pz'][macro_select]
+                CurrentBeam.beam._beam['t'] = CurrentBeam.beam._beam['t'][macro_select]
+                CurrentBeam.beam._beam['charge'] = CurrentBeam.beam._beam['charge'][macro_select]
+                
             self.progress.emit((i+1)*1/self.nSteps)
             self.newbeam.emit(CurrentBeam)
             
@@ -177,6 +250,7 @@ class BeamTrackWindow(QWidget):
         
         self.BeamList = pyqt.QListWidget()
         self.TrackedBeams = []
+        self.LengthArray = []
         self.OptionsLayout.addWidget(pyqt.QLabel('Select Tracked Beam:'),10,0,1,1)
         self.OptionsLayout.addWidget(self.BeamList,11,0,1,3)
         
@@ -192,55 +266,39 @@ class BeamTrackWindow(QWidget):
         self.SaveAllBeamsButton.clicked.connect(self.SaveAllBeams)
         self.OptionsLayout.addWidget(self.SaveAllBeamsButton,20,0,1,3)
         
-        #Plot a handful of variables - set up the plots for when tracking
-        self.LengthArray = []
-        self.SigmaX = []
-        self.SigmaY = []
-        self.Mx = []
-        self.My = []
-        self.epsx = []
-        self.epsy = []
-        self.Charge = []
-        self.SigmaT = []
+        #Plot a handful of variables - can choose the variable in the plot
         
-        self.SigXPlot = pg.PlotWidget()
-        self.SigYPlot = pg.PlotWidget()
-        self.SigTPlot = pg.PlotWidget()
-        self.MXPlot = pg.PlotWidget()
-        self.MYPlot = pg.PlotWidget()
-        self.epsXPlot = pg.PlotWidget()
-        self.epsYPlot = pg.PlotWidget()
-        self.ChargePlot = pg.PlotWidget()
+        self.plot1 = beamTrackPlot()
+        self.plot1.variableSelect.setCurrentIndex(1)
+        self.plot2 = beamTrackPlot()
+        self.plot2.variableSelect.setCurrentIndex(2)
+        self.plot3 = beamTrackPlot()
+        self.plot3.variableSelect.setCurrentIndex(6)
+        self.plot4 = beamTrackPlot()
+        self.plot4.variableSelect.setCurrentIndex(7)
+        self.plot5 = beamTrackPlot()
+        self.plot5.plotChange()
+        self.plot6 = beamTrackPlot()
+        self.plot6.variableSelect.setCurrentIndex(9)
         
-        self.Plots = [self.SigXPlot,self.SigYPlot,self.SigTPlot,self.MXPlot,self.MYPlot,self.epsXPlot,self.epsYPlot,self.ChargePlot]
-        PlotAxisLabel = ['sigmax [m]','sigmay [m]','sigmat [s]','Mean Position - X [m]','Mean Position - Y [m]','Emittance - X [m rad]',
-                         'Emittance - Y [m rad]','Charge Transported [%]']
-        for i in range(len(self.Plots)):
-            self.Plots[i].setBackground('w')
-            self.Plots[i].getAxis('bottom').setPen('k')
-            self.Plots[i].getAxis('left').setPen('k')
-            self.Plots[i].getAxis('bottom').setTextPen('k')
-            self.Plots[i].getAxis('left').setTextPen('k')
-            self.Plots[i].setLabel('bottom', 'L [m]')
-            self.Plots[i].setLabel('left', PlotAxisLabel[i])
+        self.FontSelect = pyqt.QComboBox()
+        self.FontSelect.addItems(["Times","Arial", "Helvetica", "Serif"])
+        self.FontSize = pyqt.QSpinBox()
+        self.FontSize.setRange(1, 30)
+        self.FontSize.setValue(8)
+        self.FontSelect.currentIndexChanged.connect(self.ChangeFont)
+        self.FontSize.valueChanged.connect(self.ChangeFont)
         
-        self.SigXPlot.plot(self.LengthArray,self.SigmaX, pen = 'k')
-        self.SigYPlot.plot(self.LengthArray,self.SigmaY, pen = 'k')
-        self.SigTPlot.plot(self.LengthArray,self.SigmaT, pen = 'k')
-        self.MXPlot.plot(self.LengthArray,self.Mx, pen = 'k')
-        self.MYPlot.plot(self.LengthArray,self.My, pen = 'k')
-        self.epsXPlot.plot(self.LengthArray,self.epsx, pen = 'k')
-        self.epsYPlot.plot(self.LengthArray,self.epsy, pen = 'k')
-        self.ChargePlot.plot(self.LengthArray,self.Charge, pen = 'k')
-        
-        self.PlotsLayout.addWidget(self.SigXPlot,0,0)
-        self.PlotsLayout.addWidget(self.SigYPlot,0,1)
-        self.PlotsLayout.addWidget(self.MXPlot,1,0)
-        self.PlotsLayout.addWidget(self.MYPlot,1,1)
-        self.PlotsLayout.addWidget(self.epsXPlot,2,0)
-        self.PlotsLayout.addWidget(self.epsYPlot,2,1)
-        self.PlotsLayout.addWidget(self.SigTPlot,3,0)
-        self.PlotsLayout.addWidget(self.ChargePlot,3,1)
+        self.PlotsLayout.addWidget(pyqt.QLabel('Font:'), 0, 0, 1, 1)
+        self.PlotsLayout.addWidget(self.FontSelect, 0, 1, 1, 1)
+        self.PlotsLayout.addWidget(pyqt.QLabel('Font Size:'), 0, 2, 1, 1)
+        self.PlotsLayout.addWidget(self.FontSize, 0, 3, 1, 1)
+        self.PlotsLayout.addWidget(self.plot1, 1, 0, 1, 4)
+        self.PlotsLayout.addWidget(self.plot2,1,4, 1, 4)
+        self.PlotsLayout.addWidget(self.plot3,2,0, 1, 4)
+        self.PlotsLayout.addWidget(self.plot4,2,4, 1, 4)
+        self.PlotsLayout.addWidget(self.plot5,3,0, 1, 4)
+        self.PlotsLayout.addWidget(self.plot6,3,4, 1, 4)
         
         self.TotalLayout.addLayout(self.OptionsLayout,0,0,1,1)
         self.TotalLayout.addLayout(self.PlotsLayout,0,1,1,2)
@@ -387,8 +445,8 @@ class BeamTrackWindow(QWidget):
             self.DriftDistanceScale.setEnabled(False)
             self.SimulateButton.setText('Simulation Running')
             self.SimulateButton.setEnabled(False)
-            
-            clearlist = [self.TrackedBeams, self.BeamList, self.LengthArray, self.SigmaX, self.SigmaY, self.SigmaT, self.Charge, self.Mx, self.My, self.epsx, self.epsy]
+            self.ProgressBar.setValue(0)
+            clearlist = [self.TrackedBeams, self.BeamList, self.LengthArray]
             for item in clearlist:
                 item.clear()
             
@@ -401,6 +459,15 @@ class BeamTrackWindow(QWidget):
             self.function.finished.connect(self.SimFinished)
             self.function.start()
         
+        
+    def ChangeFont(self):
+        Font = QFont(self.FontSelect.currentText(), self.FontSize.value())
+        plotlist = [self.plot1, self.plot2, self.plot3, self.plot4, self.plot5, self.plot6]
+        for plot in plotlist:
+            plot.plotItem.getAxis("bottom").setStyle(tickFont = Font)
+            plot.plotItem.getAxis("left").setStyle(tickFont = Font)
+            plot.plotItem.getAxis("bottom").label.setFont(Font)
+            plot.plotItem. getAxis("left").label.setFont(Font)
         
     def UpdateProgress(self,num):
         self.ProgressBar.setValue(round(100*num))
@@ -417,27 +484,13 @@ class BeamTrackWindow(QWidget):
             self.BeamList.addItem('Beam ' + str(BeamIndex))
         
         self.LengthArray.append(self.DLWLength.value() * 1/UnitConversion(self.DLWLengthScale.currentText()) * BeamIndex/self.nSteps.value())
-        self.SigmaX.append(newBeam.beam.Sx)
-        self.SigmaY.append(newBeam.beam.Sy)
-        self.Mx.append(newBeam.beam.Mx)
-        self.My.append(newBeam.beam.My)
-        self.epsx.append(newBeam.beam.normalized_horizontal_emittance)
-        self.epsy.append(newBeam.beam.normalized_vertical_emittance)
-        if BeamIndex == 0:
-            self.Charge.append(100)
-        else:    
-            self.Charge.append(100 * newBeam.beam.total_charge * 1/self.TrackedBeams[0].total_charge)
-        self.SigmaT.append(newBeam.beam.Sz * 1/const.c)
-        for plot_item in self.Plots:
-            plot_item.clear()
-        self.SigXPlot.addItem(self.SigXPlot.plot(self.LengthArray,self.SigmaX, pen = 'k'))
-        self.SigYPlot.plot(self.LengthArray,self.SigmaY, pen = 'k')
-        self.SigTPlot.plot(self.LengthArray,self.SigmaT, pen = 'k')
-        self.MXPlot.plot(self.LengthArray,self.Mx, pen = 'k')
-        self.MYPlot.plot(self.LengthArray,self.My, pen = 'k')
-        self.epsXPlot.plot(self.LengthArray,self.epsx, pen = 'k')
-        self.epsYPlot.plot(self.LengthArray,self.epsy, pen = 'k')
-        self.ChargePlot.plot(self.LengthArray,self.Charge, pen = 'k')
+        
+        self.plot1.replot (self.TrackedBeams, self.LengthArray)
+        self.plot2.replot (self.TrackedBeams, self.LengthArray)
+        self.plot3.replot (self.TrackedBeams, self.LengthArray)
+        self.plot4.replot (self.TrackedBeams, self.LengthArray)
+        self.plot5.replot (self.TrackedBeams, self.LengthArray)
+        self.plot6.replot (self.TrackedBeams, self.LengthArray)
         
         
     def SimFinished(self):
@@ -470,26 +523,13 @@ class BeamTrackWindow(QWidget):
         self.BeamList.addItem('Post Drift')
         
         self.LengthArray.append(self.DLWLength.value() * 1/UnitConversion(self.DLWLengthScale.currentText()) + driftDistance)
-        self.SigmaX.append(beamToDrift.beam.Sx)
-        self.SigmaY.append(beamToDrift.beam.Sy)
-        self.Mx.append(beamToDrift.beam.Mx)
-        self.My.append(beamToDrift.beam.My)
-        self.epsx.append(beamToDrift.beam.normalized_horizontal_emittance)
-        self.epsy.append(beamToDrift.beam.normalized_vertical_emittance)
-        self.Charge.append(100 * beamToDrift.beam.total_charge * 1/self.TrackedBeams[0].total_charge)
-        self.SigmaT.append(beamToDrift.beam.Sz * 1/const.c)
-        for plot_item in self.Plots:
-            plot_item.clear()
-        self.SigXPlot.addItem(self.SigXPlot.plot(self.LengthArray,self.SigmaX, pen = 'k'))
-        self.SigYPlot.plot(self.LengthArray,self.SigmaY, pen = 'k')
-        self.SigTPlot.plot(self.LengthArray,self.SigmaT, pen = 'k')
-        self.MXPlot.plot(self.LengthArray,self.Mx, pen = 'k')
-        self.MYPlot.plot(self.LengthArray,self.My, pen = 'k')
-        self.epsXPlot.plot(self.LengthArray,self.epsx, pen = 'k')
-        self.epsYPlot.plot(self.LengthArray,self.epsy, pen = 'k')
-        self.ChargePlot.plot(self.LengthArray,self.Charge, pen = 'k')
+        self.plot1.replot (self.TrackedBeams, self.LengthArray)
+        self.plot2.replot (self.TrackedBeams, self.LengthArray)
+        self.plot3.replot (self.TrackedBeams, self.LengthArray)
+        self.plot4.replot (self.TrackedBeams, self.LengthArray)
+        self.plot5.replot (self.TrackedBeams, self.LengthArray)
+        self.plot6.replot (self.TrackedBeams, self.LengthArray)
 
-#-------- Definition of the main window -----------#
    
 class MainWindow(QMainWindow):
 
@@ -527,6 +567,10 @@ class MainWindow(QMainWindow):
         MainBoxLayout.addWidget(SimulateButton, 3, 0,1,2)
         SimulateButton.clicked.connect(self.SimulateBeamWindow)
         
+        BeamToolsButton = pyqt.QPushButton("Beam Manipulation Tools");
+        BeamToolsButton.setStyleSheet("background-color: rgb(90,215,120)")
+        MainBoxLayout.addWidget(BeamToolsButton, 4, 0,1,2)
+        BeamToolsButton.clicked.connect(self.BeamManipulateOpen)
         
         widget = pyqt.QWidget()
         widget.setLayout(MainBoxLayout)
@@ -549,21 +593,18 @@ class MainWindow(QMainWindow):
         self.e.show()
         
     def SimulateBeamWindow(self,checked):
-       #Temporary fix. Same reason as the definition of the tracing window in the main file
-        #self.f = DiWaCAT_Tracker.BeamTrackWindow()
         self.f = BeamTrackWindow()
         self.f.show()
         
     def DiWaCATOpen(self,checked):
-        popen = subprocess.Popen(["./FieldSolver_Executable/DiWaCAT_FieldSolverUI.exe"])
-        '''
-        popen = subprocess.Popen(["./DWA_Code/DiWaCAT_Executable/DiWaCAT_FieldSolverUI.exe"], stdout=subprocess.PIPE,bufsize=1)
-        lines_iterator = iter(popen.stdout.readline, b"")
-        while popen.poll() is None:
-            for line in lines_iterator:
-                nline = line.rstrip()
-                print(nline.decode("latin"), end = "\r\n",flush =True)
-        '''
+        self.g = FieldCalcWindow.CalculationWindow()
+        self.g.show()
+        #popen = subprocess.Popen(["./FieldSolver_Executable/DiWaCAT_FieldSolverUI.exe"])
+    
+    def BeamManipulateOpen(self,checked):
+        self.h = BeamTools_GUI.BeamToolsWindow()
+        self.h.show()
+        
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     w = MainWindow()

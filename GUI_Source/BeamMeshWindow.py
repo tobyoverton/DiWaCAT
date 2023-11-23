@@ -89,7 +89,7 @@ class BeamMeshWindow(QWidget):
         self.setLayout(self.TotalLayout)
 
     def OpenBeamFile(self):
-        filename, ok = pyqt.QFileDialog.getOpenFileName(self,"Select a File", "", "HDF5 Files (*.h5)")
+        filename, ok = pyqt.QFileDialog.getOpenFileName(self,"Select a File", "", "HDF5 Files (*.h5, *.hdf5)")
         if filename:
             self.BeamPath.setText(filename)
             
@@ -102,28 +102,30 @@ class BeamMeshWindow(QWidget):
         
     def MeshAndSave(self):
         BeamIn = dbt.BeamFromFile()
-        try:
-            BeamIn.read_WakeCode_beam_file(self.BeamPath.text())
-            #Change z values so mean is at zero
-            BeamIn.z += (-1) * BeamIn.Mz
-            
-            #Mesh the beam
-            Lx = 2* self.MaxXCell.value() * BeamIn.Sx
-            Dx = Lx/(2* self.MaxXCell.value() *self.CellsPerSigmaT.value())
-            Ly = 2* self.MaxYCell.value() * BeamIn.Sy
-            Dy = Ly/(2* self.MaxYCell.value() *self.CellsPerSigmaT.value())
-            Lz = 2* self.MaxZCell.value() * BeamIn.Sz
-            Dz = Lz/(2* self.MaxZCell.value() *self.CellsPerSigmaL.value())
-            
-            binnedBeam = dbt.beamBinner(BeamIn)
-            binnedBeam.binTheBeam(Lx=Lx,Dx=Dx,Ly=Ly,Dy=Dy,Lz=Lz,Dz=Dz)
-            print("Fraction of total charge captured on this mesh is",binnedBeam.nMacroHist/BeamIn.nMacros)
-            
-            filename, ok = pyqt.QFileDialog.getSaveFileName(self,"Select a File", "", "HDF5 Files (*.h5)")
-            if filename:
-                path = Path(filename)
-            binnedBeam.write_hd5f_mesh_file(path,outputMacros=True, overwrite_existing_file=True,includeSmoothed=False,includeUnSmoothed=True)
-            print('File Written')
-        except:
-            print('File Unable to Load')
+        #try:
+        BeamIn.read_WakeCode_beam_file(self.BeamPath.text())
+        #Change z values so mean is at zero
+        BeamIn._beam['z'] += (-1) * BeamIn.Mz
+        BeamIn._beam['x'] += (-1) * BeamIn.Mx
+        BeamIn._beam['y'] += (-1) * BeamIn.My
+        
+        #Mesh the beam
+        Lx = 2* self.MaxXCell.value() * BeamIn.Sx
+        Dx = Lx/(2* self.MaxXCell.value() *self.CellsPerSigmaT.value())
+        Ly = 2* self.MaxYCell.value() * BeamIn.Sy
+        Dy = Ly/(2* self.MaxYCell.value() *self.CellsPerSigmaT.value())
+        Lz = 2* self.MaxZCell.value() * BeamIn.Sz
+        Dz = Lz/(2* self.MaxZCell.value() *self.CellsPerSigmaL.value())
+        
+        binnedBeam = dbt.beamBinner(BeamIn)
+        binnedBeam.binTheBeam(Lx=Lx,Dx=Dx,Ly=Ly,Dy=Dy,Lz=Lz,Dz=Dz)
+        print("Fraction of total charge captured on this mesh is",binnedBeam.nMacroHist/BeamIn.nMacros)
+        
+        filename, ok = pyqt.QFileDialog.getSaveFileName(self,"Select a File", "", "HDF5 Files (*.h5)")
+        if filename:
+            path = Path(filename)
+        binnedBeam.write_hd5f_mesh_file(path,outputMacros=True, overwrite_existing_file=True,includeSmoothed=False,includeUnSmoothed=True)
+        print('File Written')
+        #except:
+            #print('File Unable to Load')
         

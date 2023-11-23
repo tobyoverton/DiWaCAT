@@ -7,3 +7,4 @@ QtPy
 scipy
 PyQt5
 matplotlib
+pybind11
