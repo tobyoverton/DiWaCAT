@@ -309,6 +309,7 @@ class BeamMakeWindow(QWidget):
         self.Skew = pyqt.QDoubleSpinBox()
         self.SkewLabel = pyqt.QLabel('Skew Factor (alpha):')
         self.Skew.setSingleStep(0.5)
+        self.Skew.setRange(-10,10)
         if self.ProfileShape.currentText() == 'SkewGaussian':
             self.BeamParameters.addWidget(self.SkewLabel,12,0)
             self.BeamParameters.addWidget(self.Skew,12,1)
