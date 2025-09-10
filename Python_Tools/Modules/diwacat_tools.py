@@ -177,9 +177,9 @@ class DiWaCATOutput(object):
             #Apply kick to the momenta of macroparticles
             KicksApplied = self.ReturnFieldInterpolated(savedpositions)
             for i in range(len(self.beam._beam['x'])):
-                self.beam._beam['px'][i] += steplength * KicksApplied[i][0] * self.beam.q_over_c
-                self.beam._beam['py'][i] += steplength * KicksApplied[i][1] * self.beam.q_over_c
-                self.beam._beam['pz'][i] += steplength * KicksApplied[i][2] * self.beam.q_over_c
+                self.beam._beam['px'][i] += steplength * KicksApplied[0][i] * self.beam.q_over_c
+                self.beam._beam['py'][i] += steplength * KicksApplied[1][i] * self.beam.q_over_c
+                self.beam._beam['pz'][i] += steplength * KicksApplied[2][i] * self.beam.q_over_c
                 
             #Remove particles collimated by the DLW
             if remove_losses == True:
@@ -200,7 +200,7 @@ class DiWaCATOutput(object):
         charge = self.beam._beam['charge'];
         if np.any(charge == 0):
             macro_select = np.nonzero(charge)
-            print("Beam losses detected. Charge Lost = ", (len(self.beam._beam['x']) - len(macro_select)[0])*self.beam.charge_per_macro, " C")
+            print("Beam losses detected. Charge Lost = ", (len(self.beam._beam['x']) - len(macro_select))*self.beam.charge_per_macro, " C")
         else:
             macro_select = ...
 
