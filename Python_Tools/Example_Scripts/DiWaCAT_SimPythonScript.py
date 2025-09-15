@@ -198,6 +198,9 @@ for m in range(N_STAGES):
             calculation._InputParameters['ModePrec'] = ModePrec
             calculation._InputParameters['ModeAcc'] = ModeAcc
             calculation._InputParameters['ConvergenceCalculate'] = False
+			if (calculation.Geometry == 'v'):
+                calculation._InputParameters['y0'] = calculation._InputParameters['x0']
+                calculation._InputParameters['x0'] = offset * 1e2
             
             #Do the calculation
             calculation.FieldCalculation()
@@ -210,9 +213,10 @@ for m in range(N_STAGES):
         #----------------------------------------------#
         DWA_Beam._DielectricParameter['L'] = dlw_length
         DWA_Beam.TransportThroughDLW(nSteps = 3)
-        DWA_Beam.ClearLostParticles()
+        #DWA_Beam.ClearLostParticles()
 		#Save the beam at each step
 		#You could always remove this
         DWA_Beam.beam.write_HDF5_beam_file(SAVEFOLDER + "beamfile_stage" + str(m) + "_dlw"+str(n)+".h5", overwrite_existing_file=True)
 		
 		
+
